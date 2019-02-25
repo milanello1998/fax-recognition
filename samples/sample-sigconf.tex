@@ -115,6 +115,21 @@ In this paper, we focus on an end to end solution for financial fax file ingesti
  
 The rest of this paper is structured as follows: Section 2 introduces state-of-art fax ingestion solutions. In section 3, we present the overall design of the solution and its components. Section 4 discusses in specific how deep learning is employed towards an accurate and efficient signature verification, with experiment proofs. Section 5 discusses in details how content ingestion and data extractions are done with experiment proofs. In section 6, we deploy our solution for a real life financial institution to resolve its fax processing challenges. Specific performance tuning is done for it and incremental learning is designed for a continuously evolving model. Last but not the least, in section 7, we discuss open questions w.r.t research and possible next steps for this solution.
 
+\begin{comment}
+new structure of the paper will like below
+2. 介绍传真使别问题域的研究现状
+3. 系统整体设计
+4. 签名校验模块中的深度学习
+5. 内容萃取（ingestion)和结构数据抽取中的深度学习
+6. 生产环境部署
+        介绍案例的背景
+        a. 在线与离线学习
+        b. 性能调优
+        c. 部署策略
+7. Conclusion and Future Works
+Acknowledgements
+\end{comment}
+
 \section{Related Work}
 The problem of data extraction from documents images has drawn attention over decades \cite{nagy2000twenty}. Generally, it involves two types of tasks, character recognition (OCR) and document parsing. With the application of deep neural networks, OCR engines such as Tesseract \cite{smith2007overview} have achieved good performance when dealing with documents with simple textual layout and good quality scans. \cite{jaderberg2014synthetic} firstly employ convolutional neural networks to extract the feature the texts and train end-to-end learnable recognition models. Following this work, several advanced approaches were proposed. Broadly speaking, these approaches can be categorized into two types. In the first approach, text detection and recognition are processed separately \cite{shi2017end, tian2016detecting, he2017deep, lyu2018multi, borisyuk2018rosetta}. The second approach is to learn detection and recognition jointly such as \cite{li2017towards, buvsta2017deep, liu2018fots}. Besides, there are also amount of works that concentrate on extracting data from documents into structured formats \cite{cesarini1998informys, chanod2005legacy, peanho2012semantic, li2016precomputed}. However, such works usually needs accuracy textual information and require expertise and rules from user, limiting their flexibility on data extraction from images.
 
