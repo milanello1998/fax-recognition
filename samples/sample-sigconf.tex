@@ -155,9 +155,17 @@ Besides the high performance, the reason we choose deep neural network-based met
 
 \section{System Overview}
 \subsection{System Architecture}
-The over-all architecture of the system is shown in Figure \ref{figure1}. The system contains three major components with respect to the workflow of fax processing in the real scenes.  
 
-The system firstly need to identify whether a fax is authorized by verifying the signatures. Concretely, signatures should be detected and located via a object detection model, and then fed to a handwriting verification model. Instead of recognizing the texts of signatures, we propose to treat the task as handwriting classification problem where each authorized writer is assigned with a class ID. The reason lies that the signatures may be forged and therefore we tend to identify the handwritings but not the names. 
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{figure1}
+	\caption{Solution Architecture Overview. }
+	\label{figure1}
+\end{figure}
+
+The solution architecture overview is shown in Figure \ref{figure1}. It consists of three major components, with respect to fax processing workflow in real financial institutions - signature verification, template classification and data extraction.
+
+Most financial FAX documents have hand-written signatures on it from senders (just cover page or every page) as a proof of truth. At the very beginning of processing, these signatures need to be verified for further processing. Signature verification component firstly locates possible signatures on FAX documents via an object detection model, then feeds detected area(s) to a handwritting verification model. We treat this problem as a classification problem rather than a handwriting conversion problem as signatures could be forged but handwriting features won't change easily. Each authorized sender will be pre-collected with a class ID assigned. Detected signature areas will be classified into class IDs ranked by possibility. 
 
 The second component is a template classification system. We pre-defined several templates which contains different functional regions. If a fax is classified as a labeled template, it can be directly applied with respect to the defined regions and converted to the structured data formats. Note that we do not set the detailed location of each region but only give a semantic label. The region spotting and text extraction are accomplished by the third component of our system.
 
