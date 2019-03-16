@@ -54,7 +54,14 @@
 
 %
 % The "title" command has an optional parameter, allowing the author to define a "short title" to be used in page headers.
-\title{Fax Recognition System in State Street}
+\title{A FAX Ingestion Solution with Deep Learning for Financial Institutions}
+
+\begin{comment}
+	Financial institution fax solution means: 
+	1. large scale
+	2. wide variety in layout pattern
+
+\end{comment}
 
 %
 % The "author" command and its associated commands are used to define the authors and their affiliations.
@@ -69,6 +76,7 @@
 }
 
 \author{Zhuo Li}
+\email{Zhuo_Li@statestreet.com}
 \affiliation{%
   \institution{State Street}
   \city{Hangzhou}
@@ -109,15 +117,19 @@ Fax has played an important role in business world to share files remotely since
 2. many believe fax is more secure than email. Technically a secure email can also save you from malware and ransomware but it is much expensive than a fax machine;
 3. fax can provide a complete trail including confirmations of document receipt. This provides extra strengthen for communication resiliency;
 
-Due to these factors, fax still has a massive user base and becomes too prevalent to walk away. Financial industry probably is one of the few most heavy fax users as its strictly regulated nature. In financial industry, fax ingestion usually involves 3 steps: fax classification, signature verification and data extraction. The whole process is very manual and error-prone. Most of time it involves hard copies printed out, which engages extra overhead in document retention, disposal and archiving as well. Data representation and layout variability across faxes make it extremely challenging to find a solution to validate data integrity and transform data into easy to manage knowledge.
+Due to these factors, fax still has a massive user base and becomes too prevalent to walk away. Financial industry probably is one of the few most heavy fax users as its strictly regulated nature. In financial industry, fax ingestion usually involves 3 steps: fax classification, signature verification and data extraction. The whole process is very manual and error-prone. Most of time it involves hard copies printed out, which engages extra overhead in document retention, disposal and archiving as well. Data representation and layout variability across faxes make it extremely challenging to find a solution to validate data integrity and transform data into easy to manage knowledge.  Besides all these challenges, there are other challenges preventing improvement of fax file processing automation level:
+1. fax image quality could vary widely for different reasons. Sometimes it is a "refaxed" version which reduced the quality, sometimes the fax machine itself may run out of ink;
+2. unstructured fax content requires more efforts to extract useful information distributed in it;
+3. handwritings on fax files require technologies like OCR and NLP to either verify its integrity or understand its semantics. Examples include handwritten signatures and comments on faxes;
 
-In this paper, we focus on an end to end solution for financial fax file ingestion with an aim to improve overall operation efficiency with less human intervention. At its core, it has trainable machine learning models fitting different steps in fax ingestion. These models are integrated with fax processing system via a set of RESTFUL APIs. A microservice framework is designed to ensure it can easily scale up and down according to volumes, and adapt to both online and offline training demands.
+
+In this paper, we focus on an end to end solution for financial fax file ingestion to improve overall operation efficiency with less human intervention with above challenges in mind. At its core, it has trainable machine learning models fitting different steps in fax ingestion. These models are integrated with fax processing system via a set of RESTFUL APIs. A microservice framework is designed for scalability consideration. Both online and offline trainings are supported via a managed sample set and correctional user feedbacks.
  
 The rest of this paper is structured as follows: Section 2 introduces state-of-art fax ingestion solutions. In section 3, we present the overall design of the solution and its components. Section 4 discusses in specific how deep learning is employed towards an accurate and efficient signature verification, with experiment proofs. Section 5 discusses in details how content ingestion and data extractions are done with experiment proofs. In section 6, we deploy our solution for a real life financial institution to resolve its fax processing challenges. Specific performance tuning is done for it and incremental learning is designed for a continuously evolving model. Last but not the least, in section 7, we discuss open questions w.r.t research and possible next steps for this solution.
 
 \begin{comment}
 new structure of the paper will like below
-2. 介绍传真使别问题域的研究现状
+2. 介绍传真识别问题域的研究现状
 3. 系统整体设计
 4. 签名校验模块中的深度学习
 5. 内容萃取（ingestion)和结构数据抽取中的深度学习
@@ -130,12 +142,16 @@ new structure of the paper will like below
 Acknowledgements
 \end{comment}
 
-\section{Related Work}
-The problem of data extraction from documents images has drawn attention over decades \cite{nagy2000twenty}. Generally, it involves two types of tasks, character recognition (OCR) and document parsing. With the application of deep neural networks, OCR engines such as Tesseract \cite{smith2007overview} have achieved good performance when dealing with documents with simple textual layout and good quality scans. \cite{jaderberg2014synthetic} firstly employ convolutional neural networks to extract the feature the texts and train end-to-end learnable recognition models. Following this work, several advanced approaches were proposed. Broadly speaking, these approaches can be categorized into two types. In the first approach, text detection and recognition are processed separately \cite{shi2017end, tian2016detecting, he2017deep, lyu2018multi, borisyuk2018rosetta}. The second approach is to learn detection and recognition jointly such as \cite{li2017towards, buvsta2017deep, liu2018fots}. Besides, there are also amount of works that concentrate on extracting data from documents into structured formats \cite{cesarini1998informys, chanod2005legacy, peanho2012semantic, li2016precomputed}. However, such works usually needs accuracy textual information and require expertise and rules from user, limiting their flexibility on data extraction from images.
+\section{Related Works}
+The problem of data extraction from documents images has drawn attention over decades \cite{nagy2000twenty}, and is where most traditional fax ingestion solutions fall into. Generally, it involves two types of tasks: text recognition and document parsing. With the application of deep neural networks, OCR engines such as Tesseract \cite{smith2007overview} have achieved good performance in dealing documents with simple textual layouts. \cite{jaderberg2014synthetic} firstly employ convolutional neural networks to extract text features and train end-to-end learnable recognition models. Following this work, several advanced approaches were proposed. Broadly speaking, these approaches can be categorized into two types: separated text detection and recognition processes like \cite{shi2017end, tian2016detecting, he2017deep, lyu2018multi, borisyuk2018rosetta}, or joint text detection and recognition processes such as \cite{li2017towards, buvsta2017deep, liu2018fots}. Besides, there are some works concentrating on extracting document data directly into structured formats \cite{cesarini1998informys, chanod2005legacy, peanho2012semantic, li2016precomputed}. However, such works usually needs accurate textual information and expertise knowledge from users, which constrains their adaptibility in extraing data from images.
 
-Most existing work focuses on either converting programmatic document files (i.e., PDF) or text recognition from images (i.e., OCR), leaving the task of extracting structured parsed data from raw image to be an challenging open problem. The reason is that simply combining two independent with single function can bring additional errors. Hence, we propose to system which extract data from raw fax images to improve the parsing accuracy. To precisely spot the data of interest such signatures, tabular data, etc., we naturally need robust and accurate object detection models. Following the state-of-art methods \cite{ren2015faster, dai2016r, li2017light}, we choose Faster R-CNN \cite{ren2015faster} to detect signatures and Light-Head R-CNN \cite{li2017light} to spot table cells respectively.
+\begin{comment}
+传统的图像内容抽取解决方案关注的重点是把图片或者可编程的文档转化成文本，对于识别真正有意义的数据元素并将他们映射到合理的数据结构中并不是终点。但对于金融机构日常处理的大部分传真文件来说，他们关注的重点只是其中一部分的信息 - 比如说成交价格、日期，机构的运营人员 需要把这些信息萃取出来之后，注射到现有的处理系统让他们数字化地流动。
+\end{comment}
 
-Besides the high performance, the reason we choose deep neural network-based methods in our system is the models can be finetuned to fit the new coming data via backpropagation, which is natural proper for a online system. There exist several researches working on incrementally improve trained models with online data such as \cite{shmelkov2017incremental, su2016line}. Inspired by such works, we design a interactive learning strategy to train the online models with author feedbacks and avoid the catastrophic forgetting problem.
+On the other hand, for most fax documents financial institutions process everyday, only limited data elements are concerned rather than the whole document, for example, order prices, trade date, etc. Operators from institutions will ''ingest'' and ''inject'' them into application systems. But most existing fax recognition works focus on converting programmatic documents (i.e., PDF) or images into text as a whole with all format details captured (font size, charater directions, etc.), leaving the task of precise data ingestion a lower priority. That's why there is no ''complete'' fax processing solution in financial industry yet - they only resolve the ''conversion'' problem, but not the ''ingestion'' problem which is the ultimate demand. With all above challenges in mind, we try to find a solution for financial fax processing by weighting data ingestion more over format. We spot signatures and tabular data with more focus, as the former is at the critical path beginning of fax processing, and the later stand for most efficiency improvement opportunity to capture concerned data elements in a batch. The solution requires a robust and accurate object detection model, where a few methods have been developed \cite{ren2015faster, dai2016r, li2017light}. We choose Faster R-CNN \cite{ren2015faster} to detect signatures and Light-Head R-CNN \cite{li2017light} to capture tabular data respectively. 
+
+Besides the high performance, the reason we choose deep neural network-based methods in our system is models can be finetuned to fit the new coming data via backpropagation, which is natural for a online system. There exists several researches working on incrementally improving trained models with online data such as \cite{shmelkov2017incremental, su2016line}. Inspired by such works, we design an interactive learning strategy to train online models with author feedbacks and avoid the catastrophic forgetting problem.
 
 \section{System Overview}
 \subsection{System Architecture}
