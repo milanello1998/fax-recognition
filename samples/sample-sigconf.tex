@@ -5,6 +5,7 @@
 \usepackage{multirow}
 \usepackage[linesnumbered,ruled]{algorithm2e}
 \usepackage{algpseudocode}
+\usepackage{citeall}
 \renewcommand{\algorithmicrequire}{\textbf{Input:}} % Use Input in the format of Algorithm
 \renewcommand{\algorithmicensure}{\textbf{Output:}} % Use Output in the format of Algorithm
 %
@@ -53,7 +54,14 @@
 
 %
 % The "title" command has an optional parameter, allowing the author to define a "short title" to be used in page headers.
-\title{Fax Recognition System in State Street}
+\title{A FAX Ingestion Solution with Deep Learning for Financial Institutions}
+
+\begin{comment}
+	Financial institution fax solution means: 
+	1. large scale
+	2. wide variety in layout pattern
+
+\end{comment}
 
 %
 % The "author" command and its associated commands are used to define the authors and their affiliations.
@@ -68,6 +76,7 @@
 }
 
 \author{Zhuo Li}
+\email{Zhuo_Li@statestreet.com}
 \affiliation{%
   \institution{State Street}
   \city{Hangzhou}
@@ -103,56 +112,69 @@ In this paper, we introduce the large scale fax recognition system in State Stre
 \maketitle
 
 \section{Introduction}
-Fax has played an important role in business world to share files remotely since the introduction of the first commercialized version of modern fax machines in 1964 by Xerox Corporation. After we entered 21st century, although business usually maintain some kind of fax capability, fax has faced increasing competition from Internet-based alternatives like emails. However, in some industries and countries, because electronic signatures on contracts are not yet recognized by law, while faxed contracts with copies of signatures are, fax machines enjoy continuing support in business. Financial industry is such an example.
+Fax has played an important role in business world to share files remotely since the introduction of the first commercialized version of modern fax machines in 1964 by Xerox Corporation. After we entered 21st century, people may have an intuitive impression that FAX usage is reduced due to increasing competition from Internet-based alternatives like emails, but the reality is it is as important to business as it ever was, if not more. According to \cite{couponchili2015faxfacts}, there are 46.3 million Fax machines in the world, who sent 16 billion faxes in 2017. That means a big financial and environmental cost. Nevertheless, according to \cite{idc2017faxusagewhitepaper}, 82\% of survey respondents said fax usage increased of the past year, and they expect it to continue growing by another 25\% over the next two years. Multiple reasons involved make reducing Fax usage a challenge.
+1. regulation and government standards allow and encourage faxing. Technically an e-signature might be enough for somebody, but the legality of an e-signature can't be intuitively recognized and accepted. Many people just don't want to take the risk;
+2. many believe fax is more secure than email. Technically a secure email can also save you from malware and ransomware but it is much expensive than a fax machine;
+3. fax can provide a complete trail including confirmations of document receipt. This provides extra strengthen for communication resiliency;
+
+Due to these factors, fax still has a massive user base and becomes too prevalent to walk away. Financial industry probably is one of the few most heavy fax users as its strictly regulated nature. In financial industry, fax ingestion usually involves 3 steps: fax classification, signature verification and data extraction. The whole process is very manual and error-prone. Most of time it involves hard copies printed out, which engages extra overhead in document retention, disposal and archiving as well. Data representation and layout variability across faxes make it extremely challenging to find a solution to validate data integrity and transform data into easy to manage knowledge.  Besides all these challenges, there are other challenges preventing improvement of fax file processing automation level:
+1. fax image quality could vary widely for different reasons. Sometimes it is a "refaxed" version which reduced the quality, sometimes the fax machine itself may run out of ink;
+2. unstructured fax content requires more efforts to extract useful information distributed in it;
+3. handwritings on fax files require technologies like OCR and NLP to either verify its integrity or understand its semantics. Examples include handwritten signatures and comments on faxes;
 
 
-\begin{figure*}[h]
+In this paper, we focus on an end to end solution for financial fax file ingestion to improve overall operation efficiency with less human intervention with above challenges in mind. At its core, it has trainable machine learning models fitting different steps in fax ingestion. These models are integrated with fax processing system via a set of RESTFUL APIs. A microservice framework is designed for scalability consideration. Both online and offline trainings are supported via a managed sample set and correctional user feedbacks.
+ 
+The rest of this paper is structured as follows: Section 2 introduces state-of-art fax ingestion solutions. In section 3, we present the overall design of the solution and its components. Section 4 discusses in specific how deep learning is employed towards an accurate and efficient signature verification, with experiment proofs. Section 5 discusses in details how content ingestion and data extractions are done with experiment proofs. In section 6, we deploy our solution for a real life financial institution to resolve its fax processing challenges. Specific performance tuning is done for it and incremental learning is designed for a continuously evolving model. Last but not the least, in section 7, we discuss open questions w.r.t research and possible next steps for this solution.
+
+\begin{comment}
+new structure of the paper will like below
+2. 介绍传真识别问题域的研究现状
+3. 系统整体设计
+4. 签名校验模块中的深度学习
+5. 内容萃取（ingestion)和结构数据抽取中的深度学习
+6. 生产环境部署
+        介绍案例的背景
+        a. 在线与离线学习
+        b. 性能调优
+        c. 部署策略
+7. Conclusion and Future Works
+Acknowledgements
+\end{comment}
+
+\section{Related Works}
+The problem of data extraction from documents images has drawn attention over decades \cite{nagy2000twenty}, and is where most traditional fax ingestion solutions fall into. Generally, it involves two types of tasks: text recognition and document parsing. With the application of deep neural networks, OCR engines such as Tesseract \cite{smith2007overview} have achieved good performance in dealing documents with simple textual layouts. \cite{jaderberg2014synthetic} firstly employ convolutional neural networks to extract text features and train end-to-end learnable recognition models. Following this work, several advanced approaches were proposed. Broadly speaking, these approaches can be categorized into two types: separated text detection and recognition processes like \cite{shi2017end, tian2016detecting, he2017deep, lyu2018multi, borisyuk2018rosetta}, or joint text detection and recognition processes such as \cite{li2017towards, buvsta2017deep, liu2018fots}. Besides, there are some works concentrating on extracting document data directly into structured formats \cite{cesarini1998informys, chanod2005legacy, peanho2012semantic, li2016precomputed}. However, such works usually needs accurate textual information and expertise knowledge from users, which constrains their adaptibility in extraing data from images.
+
+\begin{comment}
+传统的图像内容抽取解决方案关注的重点是把图片或者可编程的文档转化成文本，对于识别真正有意义的数据元素并将他们映射到合理的数据结构中并不是终点。但对于金融机构日常处理的大部分传真文件来说，他们关注的重点只是其中一部分的信息 - 比如说成交价格、日期，机构的运营人员 需要把这些信息萃取出来之后，注射到现有的处理系统让他们数字化地流动。
+\end{comment}
+
+On the other hand, for most fax documents financial institutions process everyday, only limited data elements are concerned rather than the whole document, for example, order prices, trade date, etc. Operators from institutions will "ingest" and "inject" them into application systems. But most existing fax recognition works focus on converting programmatic documents (i.e., PDF) or images into text as a whole with all format details captured (font size, charater directions, etc.), leaving the task of precise data ingestion a lower priority. That's why there is no "complete" fax processing solution in financial industry yet - they only resolve the "conversion" problem, but not the "ingestion" problem which is the ultimate demand. With all above challenges in mind, we try to find a solution for financial fax processing by weighting data ingestion more over format. We spot signatures and tabular data with more focus, as the former is at the critical path beginning of fax processing, and the later stand for most efficiency improvement opportunity to capture concerned data elements in a batch. The solution requires a robust and accurate object detection model, where a few methods have been developed \cite{ren2015faster, dai2016r, li2017light}. We choose Faster R-CNN \cite{ren2015faster} to detect signatures and Light-Head R-CNN \cite{li2017light} to capture tabular data respectively. 
+
+Besides the high performance, the reason we choose deep neural network-based methods in our system is models can be finetuned to fit the new coming data via backpropagation, which is natural for a online system. There exists several researches working on incrementally improving trained models with online data such as \cite{shmelkov2017incremental, su2016line}. Inspired by such works, we design an interactive learning strategy to train online models with author feedbacks and avoid the catastrophic forgetting problem.
+
+\section{Solution Overview}
+\subsection{Solution Architecture}
+
+\begin{figure}[h]
 	\centering
 	\includegraphics[width=\linewidth]{figure1}
-	\caption{The pipeline of fax recognition system. }
+	\caption{Solution Architecture Overview. }
 	\label{figure1}
-\end{figure*}
+\end{figure}
 
-State Street is the world's largest custodian bank who interacts with global investment managers, brokers, security companies and settlement houses to provide middle and back office services like record keeping, fund administration, custody. Faxes are heavily used in State Street both as a recipient and a sender. State Street has built an enterprise application (we  use its abbreviation "IL" in rest of this paper) to provider a UI and workflow for operation staffs to handle fax files in electronic way. However, fax processing is still a very manual and labor intensive work. It usually involves 4 steps:
-1. signature verification: operational staffs manually verify signatures on fax files based on pre-collected authorization signature samples;
-2. data capture: operational staffs manually capture data contents in fax files into IL system;
-3. data transformation: transformation rules will be applied on input data and map them to target entity structure - usually in relational format. Approval workflow will be involved as required;
-4. data distribution: transformed data will be distributed to required destinations with ACK/ NAK received from receiver side;
+The solution architecture overview is shown in Figure \ref{figure1}. It consists of three major components, with respect to fax processing workflow in real financial institutions - signature verification, template classification and data extraction.
 
-A lot of trades are sent to State Street via fax, which is the beginning of the whole back office processing. Do things right the first time is critical for financial operations, but manual works involved in first two steps above create a lot of impediments towards this goal. As one of the biggest financial service providers in the world, State Street faces big amount of fax files which makes it even harder. As an example, IL receives more than 340,000 fax files in 2017 or almost 1 million trades in these files. Also, the operational complexities State Street has bring a lot of extra varieties in fax file format and patterns too - we observed widely changed page layout even within the same fax file because it was from a broker who serves multiple State Street clients at the same time. Besides all these challenges, there are other challenges preventing improvement of fax file processing automation level:
-1. fax image quality: fax images resolution quality could be very bad due to different reasons - sometimes it is a "re-faxed" version which reduced the quality, sometimes the fax machine itself may run out of ink;
-2. handwriting recognition: sometimes the sender may add some handwritten comments on fax paper which contains important information for the receivers too. Handling these involves mechanisms across OCR (optical characters recognition) and NLP (natural language processing) and the results are not always reliable;
-3. unstructured data: financial data used to be highly structured, especially for the target outbound data. However fax files as input data may not always be organized in a structural way which will add more work for data transformation;
-4. signature verification: there are specific scenarios where (especially in east Asia) people use seal stamps as an alternative for signature;
-5. processing efficiency: as trade processing is the beginning of the whole back office operation which has strict service level deadline to catch, the process efficiency is a critical measurement as well;
+Most financial FAX documents have hand-written signatures inside from senders (just cover page or every page) as a proof of truth. At the very beginning of processing, these signatures need to be verified before further processing. Signature verification component firstly locates possible signatures on FAX documents via an object detection model, then feeds detected area(s) to a handwritting verification model. We treat this problem as a classification problem rather than a handwriting conversion problem as signatures could be forged but handwriting features won't change easily. Each authorized sender will be pre-collected with a class ID assigned. Detected signature areas will be classified into class IDs ranked by possibility. 
 
+The second component classifies FAXes into different templates which are pre-trained based on layout and sender information. A template contains multiple function areas which can be mapped to structured data formats jointly. Note that we do not set the detail location of each area but only give a semantic label as classification result, which indicates more on the targeted structured data formats rather than Fax document landscape, as FAX documents are not always upright due to twists introduced when faxing source files. The concrete area spotting and data extraction are accomplished in the third component.
 
-Fax file processing actually can be viewed as a sub-domain of OCR (optical characters recognition) image processing and there have been mature products in areas like invoice processing. However, none of these could be a direct fit in our case because the layout pattern could vary very much, and sometimes it may go into advanced domain like natural language processing. We need to find out a new way to tackle large scale fax files in State Street which can adapt to various layout patterns flexibly, remain a good accuracy level and efficient. Deep learning is the direction we pick.
+The last component is the data extraction piece. It serves two main goals. First, another object detaction model is trained to locate rectangle areas of concerned text paragraphs or tabular data. The second step is to further recognize detail data elements from either text paragraph or tabular datarows. 
 
-In this paper, we introduce the large scale fax recognition system in State Street. To be specific, we divide the complicated coupled task into three subtasks. First, we detect the handwritten signatures and verify whether the handwrittings are authorized or not. The detection model is based on Faster-RCNN and the handwriting verification model consists of a deep convolutional neural network and an angular-softmax output layer. Second, we build a convolutional image classification model to identify which company or functional category the fax belongs to. Finally, detailed contents of interest are extracted by a text recognition system, which contains two components, a light-head R-CNN model is responsible for detecting the locations of each cell in tables and each text snippet, and a Convolutional Recurrent Nueral Network (CRNN) is leveraged for OCR. We conduct abundant experiments on both synthetic and real-world data in State Street. The experimental results indicate the effectiveness and efficiency of our methods.
-
-
-\section{Related Work}
-The problem of data extraction from documents images has drawn attention over decades \cite{nagy2000twenty}. Generally, it involves two types of tasks, character recognition (OCR) and document parsing. With the application of deep neural networks, OCR engines such as Tesseract \cite{smith2007overview} have achieved good performance when dealing with documents with simple textual layout and good quality scans. \citet{jaderberg2014synthetic} firstly employ convolutional neural networks to extract the feature the texts and train end-to-end learnable recognition models. Following this work, several advanced approaches were proposed. Broadly speaking, these approaches can be categorized into two types. In the first approach, text detection and recognition are processed separately \cite{shi2017end, tian2016detecting, he2017deep, lyu2018multi, borisyuk2018rosetta}. The second approach is to learn detection and recognition jointly such as \cite{li2017towards, buvsta2017deep, liu2018fots}. Besides, there are also amount of works that concentrate on extracting data from documents into structured formats \cite{cesarini1998informys, chanod2005legacy, peanho2012semantic, li2016precomputed}. However, such works usually needs accuracy textual information and require expertise and rules from user, limiting their flexibility on data extraction from images.
-
-Most existing work focuses on either converting programmatic document files (i.e., PDF) or text recognition from images (i.e., OCR), leaving the task of extracting structured parsed data from raw image to be an challenging open problem. The reason is that simply combining two independent with single function can bring additional errors. Hence, we propose to system which extract data from raw fax images to improve the parsing accuracy. To precisely spot the data of interest such signatures, tabular data, etc., we naturally need robust and accurate object detection models. Following the state-of-art methods \cite{ren2015faster, dai2016r, li2017light}, we choose Faster R-CNN \cite{ren2015faster} to detect signatures and Light-Head R-CNN \cite{li2017light} to spot table cells respectively.
-
-Besides the high performance, the reason we choose deep neural network-based methods in our system is the models can be finetuned to fit the new coming data via backpropagation, which is natural proper for a online system. There exist several researches working on incrementally improve trained models with online data such as \cite{shmelkov2017incremental, su2016line}. Inspired by such works, we design a interactive learning strategy to train the online models with author feedbacks and avoid the catastrophic forgetting problem.
-
-\section{System Overview}
-\subsection{System Architecture}
-The over-all architecture of the system is shown in Figure \ref{figure1}. The system contains three major components with respect to the workflow of fax processing in the real scenes.  
-
-The system firstly need to identify whether a fax is authorized by verifying the signatures. Concretely, signatures should be detected and located via a object detection model, and then fed to a handwriting verification model. Instead of recognizing the texts of signatures, we propose to treat the task as handwriting classification problem where each authorized writer is assigned with a class ID. The reason lies that the signatures may be forged and therefore we tend to identify the handwritings but not the names. 
-
-The second component is a template classification system. We pre-defined several templates which contains different functional regions. If a fax is classified as a labeled template, it can be directly applied with respect to the defined regions and converted to the structured data formats. Note that we do not set the detailed location of each region but only give a semantic label. The region spotting and text extraction are accomplished by the third component of our system.
-
-Finally, the system extracts the data from each region. This process involves two tasks. First, we employ another object detection model to locate the rectangular region of each text paragraph or table cell. The second step is to recognize the detailed texts in each region.
-
-The system is running semi-automatically. A few of the staff is asked to check and correct the results given by the system via a user interface. In this way, the each corrected result can be regarded as a ground truth training sample and will be fed to the interactive training process to continuously refine the models.
+The whole process is conducted semi-automatically as it is too risky to allow full straight through processing in FAX ingestion when FAX document quality is impacted by many factors. A UI is provided for operational staff to review and edit results. At every step where manual check is involved, any correction made will be included into the ground truth training sample set, fed into relative incremental training process to continuously refine the model.
 
 \subsection{Training strategy}
-To train the models efficiently and effectively, we propose a stage-wise training strategy inspired by \cite{bengio2009curriculum}. We first generate a large amount of synthesized data which contains similar data structures with the real faxes but the layout is much simpler. After the models are converged, we set them as the initialization weights and train the models on the real scene data. The easy-to-hard learning strategy makes the models easier to converge. \ref{figure4} shows the comparison between synthesized and true data on the data extraction task.
+For model training's efficiency and effectiveness concern, we propose a staged training strategy inspired by \cite{bengio2009curriculum}. A large amount of mock data are synthesized with similar data structure in real faxes but a much simpler layout. Once models are converged, we set initialization weights on them and further train them with more complex real scenario like layouts - we call them ''true'' faxes. This easy-to-hard training strategy makes model converging process faster. \ref{figure4} shows both initial synthesized fax and further complicated fasx for data extraction task.
 
 \begin{figure}[h]
 	\centering
@@ -161,11 +183,9 @@ To train the models efficiently and effectively, we propose a stage-wise trainin
 	\label{figure4}
 \end{figure}
 
+\section{Signature Verification}
 
-
-\section{Signature Verification Models}
-
-As introduced in the previous sections, signature verification is the primary task when processing a fax. The process can be divided into two steps, first, the signatures are detected and cropped from the fax image and second, the handwritings need to be identified.
+As introduced above, signature verification is at the very beginning of the whole FAX processing crtical path. It can be divided into two steps: first, detect signatures and crop them from FAX document; second, map signatures into authorized names.
 
 \begin{figure*}[h]
 	\centering
@@ -175,15 +195,15 @@ As introduced in the previous sections, signature verification is the primary ta
 \end{figure*}
 
 \subsection{Signature Detection Model}
-Since the features of handwritings differ vastly from those of printed texts. It is a relative simple task.Therefore we employ Faster R-CNN \cite{ren2015faster} with VGG16 \cite{simonyan2014very} to reduce the amount of parameters and save video memory. The architecture is illustrated in Figure \ref{figure2}. Concretely, the model is composed of three major components. The VGG network is utilized to encode the original image into a latent feature map, and then the feature is fed to the region proposal network (RPN) to generate several region proposals, each of which is a candidate to contain a signature with high likelihood. Finally, both the region proposals and the image feature are taken by the R-CNN subnet as input to fine tune the precise border of the signature and classify whether the it is a signature block or the background.
+Since handwriting features differ vastly from printed texts. It is a relatively simpler task.We employ Faster R-CNN \cite{ren2015faster} with VGG16 \cite{simonyan2014very} to reduce the amount of parameters and save video memory. The architecture is illustrated in Figure \ref{figure2}. Concretely, the model consists three major components. The VGG network is utilized to encode the original image into a latent feature map, and then the feature is fed to the region proposal network (RPN) to generate several region proposals, each of which is a candidate to contain a signature with high likelihood. Finally, both the region proposals and the image feature are taken by the R-CNN subnet as inputs to finetune the precise border of the signature and classify whether the it is a signature block or the background.
 
 \subsection{Writer Verification Model}
-With consideration of forged signatures, we propose to identify the handwritings but not directly recognize the name for writer verification. Since the signature may belong to an unauthorized writer, we regard this problem as a $k+1$-class classification task when $k$ writers are authenticated. Handwriting verification is a difficult problem which remains a challenge. In this paper, we choose to combine Angular Softmax (A-softmax) \cite{liu2017sphereface} and ResNet-50 \cite{he2016deep} as the classification model. A-softmax is an extension of standard softmax which makes the decision boundary more stringent and separated. In this way, each handwriting is more likely to be categorized into a certain class but not close to the boundary between two classes, which is proper for our case. 
+As signatures could be forged, it is improper to "convert" singatures into names. Instead, with the concern that a signature may belong to an unauthorized writer, we treat this problem as a $k+1$-class "classification" task where only $k$ writers are authenticated. Handwriting verification is a difficult problem which remains a challenge. In this paper, we propose to combine Angular Softmax (A-softmax) \cite{liu2017sphereface} and ResNet-50 \cite{he2016deep} as the classification model. A-softmax is an extension of standard softmax which makes the decision boundary more stringent and separated. This way each handwriting can be more likely categorized into a certain class rather close to the boundary between two classes. 
 
 \subsection{Experiments}
 
 \subsubsection*{\rm \textbf{Data Collection}}
-As discussed, it is hard to train directly on the true data since the complex layout is difficult to be correctly captured by the model, we build a large synthetic dataset for the warm up training process. To be specific, we manually collected 86,481 signatures written by 486 individuals. Moreover, to train robust model which can distinguish the handwritings from different individuals, we don't ask the writers to their own names but to choose five to ten names from a given name list including 510 English names, 260 Chinese Pinyin names and 264 Indian names. All names are signed in A4 papers with a blank form. Then, the papers are sent to a scanner and the scanned signatures are split according to the form lines. The average height and width of the signature images are about 140 and 400 pixels respectively. Then we generated 124,445 synthetic faxes which match the layout and style of the real data but contains no signatures. The scanned signatures are processed using background elimination and randomly pasted to the white space of the faxes. Each synthetic fax contains 0\textasciitilde5 signatures and the specific statistics are listed in table \ref{stat sig} . We also randomly added several lines as noise into both the synthetic and true images. After preprocessing we obtain training/validation/test sets with 74785/24932/24727 synthetic faxes for signature detection and 72833/5000/8648 respectively for writer verification. The true data contains 84,000 fax images for training, 18,000 for validation and 18,000 for test respectively.
+As discussed earlier, we use an easy-to-hard training strategy to warm up the training process with a large synthetic dataset. To be specific, we manually collected 86,481 signatures written by 486 individuals. In order to get a robust model to precisely distinguish handwrittings from different individuals, we ask the writers not to sign their own names but to pick five to ten names from a given name list which includes 510 English names, 260 Chinese PinYin names and 264 Indian names, with lengths vary from 5 to 32 characters. All names are signed on a blank form with A4 size. Papers with signatures are sent to a scanner and the scanned signatures are split according to form lines. The average height and width of the signature images are about 140 and 400 pixels respectively. Then we generated 124,445 synthetic faxes which match the layout and style of the real data but with no signatures. The scanned signatures are processed using background elimination and randomly zoomed, twisted and pasted to the white space in synthesized faxes. Each synthetic fax contains 0\textasciitilde5 signatures and the specific statistics are listed in table \ref{stat sig}. We also randomly added several lines as noise into both the synthetic and "true" fax images. After preprocessing we obtain training/validation/test sets with 74785/24932/24727 synthetic faxes for signature detection and 72833/5000/8648 respectively for writer verification. The "true" data contains 84,000 fax images for training, 18,000 for validation and 18,000 for test respectively.
 \begin{table}
 	\caption{Statistics of synthetic faxes}
 	\label{stat sig}
@@ -206,7 +226,7 @@ The two steps are evaluated independently with two different metrics. The perfor
 
 For handwriting verification, we use top-1 and top-5 error rates. Specifically, in the case top-$n$, the model gives $n$ candidates with highest probabilities and the answer is correct if the ground truth label is in the $n$ predictions. 
 \subsubsection*{\rm \textbf{Results}}
-The mAP score of signature detection is listed in table \ref{signature}. As shown, we find the performance is unsatisfactory for industrial use when we train the model directly on the true data. We argue the reason lies that signatures in real faxes rarely changes on both handwritings and locations, resulting in that the model tends to remember the fixed locations. To add robustness, we used a warm-up strategy to pre-train the model on a synthetic dataset. The results show a significant improvement of 17.37 mAP score and the high final performance of 91.66 mAP is applicable in production environment.
+The mAP score of signature detection is listed in table \ref{signature}. As shown, we find the performance is unsatisfactory for industrial use when we train the model directly on the "true" faxes. We argue the reason lies that signatures in real faxes rarely changes on both handwritings and locations, resulting in that the model tends to remember the fixed locations. To improve robustness, we used a warm-up strategy to pre-train the model on a synthetic dataset. The results show a significant improvement of 17.37 mAP score and the high final performance of 91.66 mAP is applicable in production environment.
 
 For writer verification task, we also report the result of a GoogleNet based model \cite{szegedy2015going} with the similar settings. The experimental results listed in table \ref{handwriting} indicates that the ResNet-based model outperforms GoogleNet-based model with 14.32 Top-1 precision and 7.19 Top-5 precision. Finally, the 97.54 Top-5 precision is ready for industrial application with little human examination and intervention.
 
@@ -249,9 +269,9 @@ For writer verification task, we also report the result of a GoogleNet based mod
 
 
 \section{Data Extraction Models}
-Before feeding raw image into data extraction models, we firstly classify the fax into several pre-defined classes according to the functionality. In practice, the classes are defined with respect to different companies. The process brings two benefits. (i) Since the document style, fonts, layout varies largely in different companies, we can apply multiple data extraction models, each of which only focus on few types of faxes to improve the accuracy. (ii) with pre-defined layouts, we can summarize each functional region into some normal forms (i.e., regular expression). In this way, the data extraction models only need to recognize raw data from fax images and the extracted texts can also be verified based on the normal forms. In our case, we have 51 types of faxes totally and employ GoogleNet \cite{szegedy2015going} as the classification model for its flexibility and small size. And we are able to achieve 100\% accuracy finally.
+Before feeding raw images into data extraction models, we firstly classify faxes into several pre-defined classes according to their business semantics. In practice, the classes are defined with respect to different senders. The process brings two benefits. (i) Since the document style, fonts, layout varies largely across different senders, we can apply multiple data extraction models, each of which only focus on limited types of faxes to improve the accuracy. (ii) with pre-defined layouts, we can summarize each functional areas into some normal forms (i.e., regular expression). This way, the data extraction models only need to recognize raw data from fax images and the extracted texts can also be verified based on the normal forms. In our case, we prepared 51 fax types and employ GoogleNet \cite{szegedy2015going} as the classification model for its flexibility and small size. And we are able to achieve 100\% accuracy finally.
 
-The data extraction process involves two tasks as shown in Figure \ref{figure3}. First, we need to detect region of each text snippets and second the texts are recognized via OCR. Though existing OCR applications can achieve high accuracy on text recognition, most of them can hardly distinguish each table cell and tend to generate a line of texts sequentially. However, tabular data plays a key role in most office work scene, especially in financial industry. In this paper, we focus on detecting every table cell in the fax and the rest texts are detected in paragraph level as shown in Figure \ref{figure5}.
+The data extraction process involves two tasks as shown in Figure \ref{figure3}. First, we need to detect areas of each text snippet and in the second step, texts are recognized via OCR. Though existing OCR technology can achieve high accuracy on text recognition, most of them can hardly separate cells in a tabular area and tend to generate text lines sequentially. But data table plays a key role in financial fax processing as it usually contains most intensive useful information. Due to that, our work focuses more on data ingestion from table cells and paragraph texts as shown in Figure \ref{figure5}.
 
 
 \begin{figure}[h]
@@ -261,10 +281,10 @@ The data extraction process involves two tasks as shown in Figure \ref{figure3}.
 	\label{figure5}
 \end{figure}
 
-\subsection{Data Detection Model}
-To effectively detect each table cell and text snippet, we apply the state-of-art object detection model Light-Head R-CNN \cite{li2017light} for this task. Light-Head R-CNN is an extension of Faster R-CNN with higher detection accuracy and speed. Moreover, we choose ResNet-101 in \cite{he2016deep} as the CNN structure for higher detection performance.
+\subsection{Data Extraction Model}
+To effectively detect each table cell and text snippet, we apply the state-of-art object detection model Light-Head R-CNN \cite{li2017light}. Light-Head R-CNN is an extension of Faster R-CNN with higher detection accuracy and speed. Moreover, we choose ResNet-101 in \cite{he2016deep} as the CNN structure for higher detection performance.
 
-As in our experiments, we found that directly training the models with three classes (table cells, text snippets and background) can hardly achieves a satisfactory result. The reason is that texts in table and other paragraphs are often in some fonts, sizes, and peripheral regions are usually blank, which limits the model to distinguish table and paragraphs. To address this problem, we add a new class "table" into the detection problem during training which can improve detection accuracy of cell texts by explicitly provide the relative relationship between tables and text paragraphs.
+Along our experiments, we found that directly training models with three classes (table cells, text snippets and background) can hardly achieve a satisfactory result. The reason is that text in tables and other paragraphs are often in the same font and size, but peripheral regions are usually blank, which limits the model to distinguish tables from paragraphs. To address this problem, we add a new class "table" into the detection model during training which can improve accuracy of cell texts detection by explicitly providing relative relationship between tables and text paragraphs.
 
 Another problem for the data detection model is that NMS (non maximal suppression) can result in overlapped candidate regions when $NMS\_THRESHOLD$ is less than 1. It is common for general object detection but can result in duplicate text recognized in our system. Therefore, we just set $NMS\_THRESHOLD$ to 1 and combine all overlapped regions into one area. The algorithm for removing overlapped regions is detailed in Algorithm \ref{algorithm2}.
 
@@ -300,22 +320,37 @@ Another problem for the data detection model is that NMS (non maximal suppressio
 \end{algorithm}
 
 \subsection{Text Recognition Model}
-The OCR model is convolutional recurrent neural network (CRNN) \cite{shi2017end} in this task. The model consists of a deep CNN, a bi-directional recurrent network (bi-RNN) with long short term units (LSTM) and a connectionist temporal classification (CTC) \cite{graves2006connectionist} output layer. Similar to the detection model, the CNN body is utilized to extract the feature map of the original image and the structure is VGG-16 for its good performance on transfer tasks. The bi-RNN model on top of the CNN is responsible to generate the characters sequentially. CTC output layer is responsible to compute the probability of each output label generated by bi-LSTM by marginalizing
-over the set of all possible alignments paths, which is appropriate to find the local optimum sequence among blanks and duplicate characters.
+We use convolutional recurrent neural network (CRNN) \cite{shi2017end} in this task. It consists of a deep CNN, a bi-directional recurrent network (bi-RNN) with long short term units (LSTM) and a connectionist temporal classification (CTC) \cite{graves2006connectionist} output layer. Similar to the detection model, the CNN body is utilized to extract the feature map of the original image and the structure is VGG-16 for its good performance on transfer tasks. The bi-RNN model on top of the CNN is responsible to generate the characters sequentially. CTC output layer is responsible for computing the probability of each output label generated by bi-LSTM by marginalizing over the set of all possible alignments paths, which is appropriate to find the local optimum sequence among blanks and duplicate characters.
+
 \subsection{Experiments}
 \subsubsection*{\rm \textbf{Data Collection}}
-For the data detection task, as shown in Figure \ref{figure4}, the layout of real fax is quite complex and we find it is hard to converge when we directly train the detection model on the real dataset. To address this issue, we construct a synthesized dataset, the fax image in which is much simpler in terms of layout and drawing format, but more various in density of table/text cells, fonts and sizes. Since the features in structures at coarse-grained level (layouts and formats) is easy to capture, the model can converge quickly, and the introduced fine-grained variabilities (location and fonts) can bring robustness to the model. A synthesized fax may have multiple text snippets, tables and multiple signatures. The size, location, font and rotation of each text area are all random. In this way, are are capable to obtain a large-scale labeled dataset with 80,000 samples. We split the dataset with ratio 70\%/15\%/15\% for training/validation/test respectively. 
+For the data detection task, as shown in Figure \ref{figure4}, the layout of real fax is quite complex and we find it is hard to converge when we directly train the detection model based on "true" dataset. To address this issue, we construct a synthesized dataset, where fax images are much simpler in terms of layouts, but vary more in density of table/text cells, fonts and sizes. Since the features in structures at coarse-grained level (layouts and formats) is easy to capture, the model can converge quickly, and the introduced fine-grained variabilities (locations and fonts) can bring robustness to the model. A synthesized fax may have multiple text snippets, tables and multiple signatures. The size, location, font and rotation of each text area are all random. This way, we are able to obtain a large-scale labeled dataset with 80,000 samples. We split the dataset with ratio 70\%/15\%/15\% for training/validation/test respectively. 
 
-For text recognition model, we simply mix the images of table cells and text snippets from both the synthesized and true datasets. It should be noted proper preprocessing process can greatly improve the recognition accuracy. Specifically, we preprocessed the cell and text snippet images with such methods as enhance normalization, text smoothing with threshold 50\%, grayscaling, background cleaning with filter size 25, background trimming, sharpening and border padding. The preprocessing methods are verified to be effective in our experiments.
+For text recognition model, we simply mix the images of table cells and text snippets from both the synthesized and true datasets. It should be noted proper preprocessing process can greatly improve the recognition accuracy. Specifically, we preprocessed the cell and text snippet images with enhancing methods such as normalization, text smoothing with threshold 50\%, grayscaling, background cleaning with filter size 25, background trimming, sharpening and border padding. The preprocessing methods are verified to be effective in our experiments.
+
+\begin{comment}
+这里有没有一些汇总的数据来表征这些预处理带来的好处？
+\end{comment}
 
 \subsubsection*{\rm \textbf{Evaluation Metrics}}
-The data detection model is evaluated with mAP metric which is the same with the signature detection model. For text recognition, we propose a hybrid evaluation metric namely Modified Word Accuracy which is more appropriate to measure how much manual labor has been reduced by our system. To be specific, different from existing work \cite{borisyuk2018rosetta, shi2017end} which uses fragment accuracy and edit distance for evaluation independently, we combine the two metrics. First we set score 1 to all correctly recognized words. Then for the incorrect words, the score is defined as the ratio of edit distance between the correct and incorrect words to the length of the true word. 
+The data detection model is evaluated with mAP metric which is the same as the signature detection model. For text recognition, we propose a hybrid evaluation metric called Modified Word Accuracy which is more appropriate to measure how much manual labor can be reduced by our solution. To be specific, unlike existing work \cite{borisyuk2018rosetta, shi2017end} which uses fragment accuracy and edit distance for independent evaluation, we combine the two metrics. First we set score 1 to all correctly recognized words, then for incorrect words, the score is defined as the ratio of edit distance between the correct and incorrect words to the length of the true word. 
+
+\begin{comment}
+这个混合度量的具体好处从上面的解释没看出来。。。它怎么提现能节约的工作量的？感觉只是个比例？
+\end{comment}
 
 \subsubsection*{\rm \textbf{Results}}
-The main results of data detection tasks are shown in Table \ref{tabel_detection}. It can be observed that our warm up strategy is quite effective in the task. The model is capable to achieve high performance on the synthesized dataset with 90.71 mAP for the simple coarse-grained layouts and formats. However, the mAP drops sharply when trained on the true data directly which is far from industrial application. With the warm-up strategy, the final mAP on the true data is 98 mAP which is even higher than the results on the synthetic data. The reason is that the real dataset has less variability than the synthesized one but the complex drawing format makes the CNN architecture difficult to map the original fax image into latent space and it is where our warm up strategy works.
+The main results of data detection tasks are shown in Table \ref{tabel_detection}. It can be observed that our warm up strategy is quite effective in the task. The model is capable to achieve high performance on the synthesized dataset with 90.71 mAP for  simple coarse-grained layouts and formats. However, the mAP drops sharply when training on the "true" data directly which is far from industrial solutions like ABBYY FineReader or Adlib PDF. With the warm-up strategy, the final mAP on the true data is 98 mAP which is even higher than the results on the synthetic data. The reason is that the "true" dataset has less variability than the synthesized one but the complex drawing format makes the CNN architecture difficult to map the original fax image into latent space and it is where our warm up strategy works.
 
-For the text recognition tasks, we can observe the clear gap between the two strategies with or without image preprocessing. Finally, the text recognition model achieves the industrial applicable results of 96.41 accuracy. In this way, only one or two human checkers are
-needed to check whether the recognized tables and texts are correct or not. Manual work on typing the entire texts of a fax is never needed.
+
+
+For text recognition task, we can observe clear gap between the two strategies with or without preprocessing. Finally, the text recognition model achieves the industrial comparable result of 96.41 accuracy. This way, only one or two human checkers are
+needed to check and edit recognized tables and texts. Manual typing the entire fax content is no longer needed.
+
+\begin{comment}
+只要1-2个操作员这个结论是怎么得出的？
+检查工作是看内容是不是对，然后纠正？
+\end{comment}
 
 \begin{table}
 	\caption{Performance of data detection}
@@ -351,6 +386,36 @@ needed to check whether the recognized tables and texts are correct or not. Manu
 
 \section{Deployment}
 \subsection{Deployment Strategy}
+
+All experiments are conducted on a server with 4 Titan XP GPUs. The 3 components' models are assigned to one GPU respectively and the last one is reserved for incremental training which will be mentioned later. To ensure process efficiency, we support up to 256 fax images concurrent processing in a multithread way. Following work in \cite{li2017light}, we resize the shorter edge of each fax image to 800 pixels, and put a constrain on the longer edge length of no longer than 1200 pixels. A user interface is provided to show outcomes from each step as \ref{figure6}. Operators can check, edit and submit the ingestion results through the UI workflow. The average training and inference time is listed in table\ref{avg_model_overhead_time}. we can see that the averagetime top rocess one fax image is less than 5 seconds which is applicable for financial industry and much faster than a manual worker does.The step takes most time is the text recognition process and the inference time depends on the word quantity. The entire system is built in the form of a webservice and we use coroutines for concurrence in  the back-end to reducememory overhead. The service is capable to serve at most 1024 manual checkers synchronously. All machine learning models in our system are implemented with Caffe2[11] except the light-headR-CNN model which is implemented with PyTorch[20].The whole system is already available and will beput into use after several months. 
+
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=5cm]{figure6}
+	\caption{The user interface of the solution.}
+	\label{figure6}
+\end{figure}
+
+
+\begin{table}
+	\caption{Average time overhead of the machine learning models}
+	\label{avg_model_overhead_time}
+	\centering
+	\begin{tabular}{cc}
+	\toprule
+	\textbf{Component} & \textbf{Model}  & \multicolumn{2}{c}{\textbf{Time}}\\
+	\cline{3-4}
+	& & \textbf{Training} & \textbf{Inference}\\
+	\midrule
+	Signature Verification & Faster R-CNN  & 96 hours & 0.42 sec/ 0.19 sec\\
+	Template Classification & A-Softmax/ GoogleNet  & 72 hours/ 72 hours & 0.19 sec/ 0.18 sec\\
+	Data Extraction & Light-head R-CNN/ CRNN  & 24 hours/ 96 hours & 0.79 sec/ 2.79 sec\\
+
+	\bottomrule
+	\end{tabular}
+\end{table}
+
 
 \subsection{Incremental Learning with Author Feedbacks}
 As a online system, author feedbacks received are extremely valuable for model refining continuously. Every author feedback can be regarded as a new training sample. Since all the machine learning models in our system are built with neural networks, it can be naturally fine-tuned to adapt to only the feedback samples but need not re-trained on whole training data. However, directly training networks on new data may lead to catastrophic forgetting, that is the network will forget previously learned knowledge. To address this issue, we, with inspiration from existing works \cite{shmelkov2017incremental, yuan2018text}, propose to fine-tune the models with distillation loss.
