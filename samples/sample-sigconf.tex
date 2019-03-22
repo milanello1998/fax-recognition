@@ -21,10 +21,8 @@
 \copyrightyear{2019}
 \acmYear{2019}
 \setcopyright{acmlicensed}
-\acmConference[KDD '19]{KDD '19: The 24th ACM SIGKDD International Conference on Knowledge
-	Discovery \& Data Mining}{August 04--08, 2019}{Anchorage, Alaska - USA}
-\acmBooktitle{KDD '19: The 24th ACM SIGKDD International Conference on Knowledge
-	Discovery \& Data Mining, August 04--08, 2019, Anchorage, Alaska - USA}
+\acmConference[MM'19]{Proceedings of MM'19}{October 21--25, 2019}{Nice, France}
+\acmBooktitle{Proceedindgs of MM'19, October 21--25, 2019, Nice, France }
 \acmPrice{15.00}
 \acmDOI{10.1145/1122445.1122456}
 \acmISBN{978-1-4503-9999-9/18/06}
@@ -70,19 +68,51 @@
 \author{Han Fu}
 \email{11821003@zju.edu.cn}
 \affiliation{%
-  \institution{Zhejiang Unnversity}
-  \city{Hangzhou}
-  \country{China}
+	\institution{Zhejiang Unnversity}
+	\city{Hangzhou}
+	\country{China}
+}
+
+\author{Yunyu Bai}
+\email{yunyubai@zju.edu.cn}
+\affiliation{%
+	\institution{Zhejiang Unnversity}
+	\city{Hangzhou}
+	\country{China}
 }
 
 \author{Zhuo Li}
-\email{Zhuo_Li@statestreet.com}
+\email{Zhuo\_Li@StateStreet.com}
 \affiliation{%
-  \institution{State Street}
-  \city{Hangzhou}
-  \country{China}}
+	\institution{State Street Corporation}
+	\city{Hangzhou}
+	\country{China}}
+
+\author{Ruichen Shao}
+\email{3150103644@zju.edu.cn}
+\affiliation{%
+	\institution{Zhejiang Unnversity}
+	\city{Hangzhou}
+	\country{China}
+}
+
+\author{Jun Shen}
+\email{JShen4@StateStreet.com}
+\affiliation{%
+	\institution{State Street Corporation}
+	\city{Hangzhou}
+	\country{China}}
+
+\author{Shenwei Hu}
+\email{SHu4@StateStreet.com}
+\affiliation{%
+	\institution{State Street}
+	\city{Hangzhou}
+	\country{China}}
+
 %
 % By default, the full list of authors will be used in the page headers. Often, this list is too long, and will overlap
+\renewcommand{\shortauthors}{Fu et al.}
 % other information printed in the page headers. This command allows the author to define a more concise list
 % of authors' names for this purpose.
 
@@ -98,6 +128,30 @@ In this paper, we introduce the large scale fax recognition system in State Stre
 % Please copy and paste the code instead of the example below.
 %
 
+\begin{CCSXML}
+	<ccs2012>
+	<concept>
+	<concept_id>10010405.10010497.10010504.10010507</concept_id>
+	<concept_desc>Applied computing~Graphics recognition and interpretation</concept_desc>
+	<concept_significance>500</concept_significance>
+	</concept>
+	<concept>
+	<concept_id>10010405.10010497.10010504.10010508</concept_id>
+	<concept_desc>Applied computing~Optical character recognition</concept_desc>
+	<concept_significance>300</concept_significance>
+	</concept>
+	<concept>
+	<concept_id>10010405.10010497.10010504.10010509</concept_id>
+	<concept_desc>Applied computing~Online handwriting recognition</concept_desc>
+	<concept_significance>100</concept_significance>
+	</concept>
+	</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Applied computing~Graphics recognition and interpretation}
+\ccsdesc[300]{Applied computing~Optical character recognition}
+\ccsdesc[100]{Applied computing~Online handwriting recognition}
+
 %
 % Keywords. The author(s) should pick words that accurately describe the work being
 % presented. Separate the keywords with commas.
@@ -112,32 +166,44 @@ In this paper, we introduce the large scale fax recognition system in State Stre
 \maketitle
 
 \section{Introduction}
-Fax has played an important role in business world to share files remotely since the introduction of the first commercialized version of modern fax machines in 1964 by Xerox Corporation. After we entered 21st century, people may have an intuitive impression that FAX usage is reduced due to increasing competition from Internet-based alternatives like emails, but the reality is it is as important to business as it ever was, if not more. According to \cite{couponchili2015faxfacts}, there are 46.3 million Fax machines in the world, who sent 16 billion faxes in 2017. That means a big financial and environmental cost. Nevertheless, according to \cite{idc2017faxusagewhitepaper}, 82\% of survey respondents said fax usage increased of the past year, and they expect it to continue growing by another 25\% over the next two years. Multiple reasons involved make reducing Fax usage a challenge.
-1. regulation and government standards allow and encourage faxing. Technically an e-signature might be enough for somebody, but the legality of an e-signature can't be intuitively recognized and accepted. Many people just don't want to take the risk;
-2. many believe fax is more secure than email. Technically a secure email can also save you from malware and ransomware but it is much expensive than a fax machine;
-3. fax can provide a complete trail including confirmations of document receipt. This provides extra strengthen for communication resiliency;
+FAX has played an important role in business world to share files remotely since the introduction of the first commercialized version of modern FAX machines in 1964 by Xerox Corporation. After we entered 21st century, people may have an intuitive impression that FAX usage is reduced due to increasing competition from Internet-based alternatives like emails, but the reality is it is as important to business as it ever was, if not more. According to \cite{couponchili2015faxfacts}, there are 46.3 million FAX machines in the world, who sent 16 billion FAXes in 2017. That means a big financial and environmental cost. Nevertheless, according to \cite{idc2017faxusagewhitepaper}, 82\% of survey respondents said FAX usage increased of the past year, and they expect it to continue growing by another 25\% over the next two years. Multiple reasons involved make reducing Fax usage a challenge:
 
-Due to these factors, fax still has a massive user base and becomes too prevalent to walk away. Financial industry probably is one of the few most heavy fax users as its strictly regulated nature. In financial industry, fax ingestion usually involves 3 steps: fax classification, signature verification and data extraction. The whole process is very manual and error-prone. Most of time it involves hard copies printed out, which engages extra overhead in document retention, disposal and archiving as well. Data representation and layout variability across faxes make it extremely challenging to find a solution to validate data integrity and transform data into easy to manage knowledge.  Besides all these challenges, there are other challenges preventing improvement of fax file processing automation level:
-1. fax image quality could vary widely for different reasons. Sometimes it is a "refaxed" version which reduced the quality, sometimes the fax machine itself may run out of ink;
-2. unstructured fax content requires more efforts to extract useful information distributed in it;
-3. handwritings on fax files require technologies like OCR and NLP to either verify its integrity or understand its semantics. Examples include handwritten signatures and comments on faxes;
+\begin{figure*}[h]
+	\centering
+	\includegraphics[width=\linewidth]{figure1}
+	\caption{Solution Architecture Overview. }
+	\label{figure1}
+\end{figure*}
+
+\begin{description}
+\item[(1)] Regulation and government standards allow and encourage faxing. Technically an e-signature might be enough for somebody, but the legality of an e-signature can't be intuitively recognized and accepted. Many people just don't want to take the risk.
+\item[(2)] Many believe FAX is more secure than email. Technically a secure email can also save you from malware and ransomware but it is much expensive than a FAX machine.
+\item[(3)] FAX can provide a complete trail including confirmations of document receipt. This provides extra strengthen for communication resiliency.
+\end{description}
+
+Due to these factors, FAX still has a massive user base and becomes too prevalent to walk away. Financial industry probably is one of the few most heavy FAX users as its strictly regulated nature. In financial industry, FAX ingestion usually involves 3 steps: FAX classification, signature verification and data extraction. The whole process is very manual and error-prone. Most of time it involves hard copies printed out, which engages extra overhead in document retention, disposal and archiving as well. Data representation and layout variability across FAXes make it extremely challenging to find a solution to validate data integrity and transform data into easy to manage knowledge.  Besides all these challenges, there are other challenges preventing improvement of FAX file processing automation level:
+\begin{itemize}
+	\item FAX image quality could vary widely for different reasons. Sometimes it is a "refaxed" version which reduced the quality, sometimes the FAX machine itself may run out of ink.
+	\item Unstructured FAX content requires more efforts to extract useful information distributed in it.
+	\item handwritings on FAX files require technologies like OCR and NLP to either verify its integrity or understand its semantics. Examples include handwritten signatures and comments on FAXes.
+\end{itemize}
 
 
-In this paper, we focus on an end to end solution for financial fax file ingestion to improve overall operation efficiency with less human intervention with above challenges in mind. At its core, it has trainable machine learning models fitting different steps in fax ingestion. These models are integrated with fax processing system via a set of RESTFUL APIs. A microservice framework is designed for scalability consideration. Both online and offline trainings are supported via a managed sample set and correctional user feedbacks.
+In this paper, we focus on an end-to-end solution for financial FAX file ingestion to improve overall operation efficiency with less human intervention with above challenges in mind. At its core, it has trainable machine learning models fitting different steps in FAX ingestion. These models are integrated with FAX processing system via a set of RESTFUL APIs. A microservice framework is designed for scalability consideration. Both online and offline trainings are supported via a managed sample set and correctional user feedbacks.
  
 The rest of this paper is structured as follows: Section 2 introduces state-of-art fax ingestion solutions. In section 3, we present the overall design of the solution and its components. Section 4 discusses in specific how deep learning is employed towards an accurate and efficient signature verification, with experiment proofs. Section 5 discusses in details how content ingestion and data extractions are done with experiment proofs. In section 6, we deploy our solution for a real life financial institution to resolve its fax processing challenges. Specific performance tuning is done for it and incremental learning is designed for a continuously evolving model. Last but not the least, in section 7, we discuss open questions w.r.t research and possible next steps for this solution.
 
 \begin{comment}
 new structure of the paper will like below
-2. ä»‹ç»ä¼ çœŸè¯†åˆ«é—®é¢˜åŸŸçš„ç ”ç©¶ç°çŠ¶
-3. ç³»ç»Ÿæ•´ä½“è®¾è®¡
-4. ç­¾åæ ¡éªŒæ¨¡å—ä¸­çš„æ·±åº¦å­¦ä¹ 
-5. å†…å®¹èƒå–ï¼ˆingestion)å’Œç»“æ„æ•°æ®æŠ½å–ä¸­çš„æ·±åº¦å­¦ä¹ 
-6. ç”Ÿäº§ç¯å¢ƒéƒ¨ç½²
-        ä»‹ç»æ¡ˆä¾‹çš„èƒŒæ™¯
-        a. åœ¨çº¿ä¸ç¦»çº¿å­¦ä¹ 
-        b. æ€§èƒ½è°ƒä¼˜
-        c. éƒ¨ç½²ç­–ç•¥
+2. ½éÉÜ´«ÕæÊ¶±ğÎÊÌâÓòµÄÑĞ¾¿ÏÖ×´
+3. ÏµÍ³ÕûÌåÉè¼Æ
+4. Ç©ÃûĞ£ÑéÄ£¿éÖĞµÄÉî¶ÈÑ§Ï°
+5. ÄÚÈİİÍÈ¡£¨ingestion)ºÍ½á¹¹Êı¾İ³éÈ¡ÖĞµÄÉî¶ÈÑ§Ï°
+6. Éú²ú»·¾³²¿Êğ
+        ½éÉÜ°¸ÀıµÄ±³¾°
+        a. ÔÚÏßÓëÀëÏßÑ§Ï°
+        b. ĞÔÄÜµ÷ÓÅ
+        c. ²¿Êğ²ßÂÔ
 7. Conclusion and Future Works
 Acknowledgements
 \end{comment}
@@ -146,7 +212,7 @@ Acknowledgements
 The problem of data extraction from documents images has drawn attention over decades \cite{nagy2000twenty}, and is where most traditional fax ingestion solutions fall into. Generally, it involves two types of tasks: text recognition and document parsing. With the application of deep neural networks, OCR engines such as Tesseract \cite{smith2007overview} have achieved good performance in dealing documents with simple textual layouts. \cite{jaderberg2014synthetic} firstly employ convolutional neural networks to extract text features and train end-to-end learnable recognition models. Following this work, several advanced approaches were proposed. Broadly speaking, these approaches can be categorized into two types: separated text detection and recognition processes like \cite{shi2017end, tian2016detecting, he2017deep, lyu2018multi, borisyuk2018rosetta}, or joint text detection and recognition processes such as \cite{li2017towards, buvsta2017deep, liu2018fots}. Besides, there are some works concentrating on extracting document data directly into structured formats \cite{cesarini1998informys, chanod2005legacy, peanho2012semantic, li2016precomputed}. However, such works usually needs accurate textual information and expertise knowledge from users, which constrains their adaptibility in extraing data from images.
 
 \begin{comment}
-ä¼ ç»Ÿçš„å›¾åƒå†…å®¹æŠ½å–è§£å†³æ–¹æ¡ˆå…³æ³¨çš„é‡ç‚¹æ˜¯æŠŠå›¾ç‰‡æˆ–è€…å¯ç¼–ç¨‹çš„æ–‡æ¡£è½¬åŒ–æˆæ–‡æœ¬ï¼Œå¯¹äºè¯†åˆ«çœŸæ­£æœ‰æ„ä¹‰çš„æ•°æ®å…ƒç´ å¹¶å°†ä»–ä»¬æ˜ å°„åˆ°åˆç†çš„æ•°æ®ç»“æ„ä¸­å¹¶ä¸æ˜¯ç»ˆç‚¹ã€‚ä½†å¯¹äºé‡‘èæœºæ„æ—¥å¸¸å¤„ç†çš„å¤§éƒ¨åˆ†ä¼ çœŸæ–‡ä»¶æ¥è¯´ï¼Œä»–ä»¬å…³æ³¨çš„é‡ç‚¹åªæ˜¯å…¶ä¸­ä¸€éƒ¨åˆ†çš„ä¿¡æ¯ - æ¯”å¦‚è¯´æˆäº¤ä»·æ ¼ã€æ—¥æœŸï¼Œæœºæ„çš„è¿è¥äººå‘˜ éœ€è¦æŠŠè¿™äº›ä¿¡æ¯èƒå–å‡ºæ¥ä¹‹åï¼Œæ³¨å°„åˆ°ç°æœ‰çš„å¤„ç†ç³»ç»Ÿè®©ä»–ä»¬æ•°å­—åŒ–åœ°æµåŠ¨ã€‚
+´«Í³µÄÍ¼ÏñÄÚÈİ³éÈ¡½â¾ö·½°¸¹Ø×¢µÄÖØµãÊÇ°ÑÍ¼Æ¬»òÕß¿É±à³ÌµÄÎÄµµ×ª»¯³ÉÎÄ±¾£¬¶ÔÓÚÊ¶±ğÕæÕıÓĞÒâÒåµÄÊı¾İÔªËØ²¢½«ËûÃÇÓ³Éäµ½ºÏÀíµÄÊı¾İ½á¹¹ÖĞ²¢²»ÊÇÖÕµã¡£µ«¶ÔÓÚ½ğÈÚ»ú¹¹ÈÕ³£´¦ÀíµÄ´ó²¿·Ö´«ÕæÎÄ¼şÀ´Ëµ£¬ËûÃÇ¹Ø×¢µÄÖØµãÖ»ÊÇÆäÖĞÒ»²¿·ÖµÄĞÅÏ¢ - ±ÈÈçËµ³É½»¼Û¸ñ¡¢ÈÕÆÚ£¬»ú¹¹µÄÔËÓªÈËÔ± ĞèÒª°ÑÕâĞ©ĞÅÏ¢İÍÈ¡³öÀ´Ö®ºó£¬×¢Éäµ½ÏÖÓĞµÄ´¦ÀíÏµÍ³ÈÃËûÃÇÊı×Ö»¯µØÁ÷¶¯¡£
 \end{comment}
 
 On the other hand, for most fax documents financial institutions process everyday, only limited data elements are concerned rather than the whole document, for example, order prices, trade date, etc. Operators from institutions will "ingest" and "inject" them into application systems. But most existing fax recognition works focus on converting programmatic documents (i.e., PDF) or images into text as a whole with all format details captured (font size, charater directions, etc.), leaving the task of precise data ingestion a lower priority. That's why there is no "complete" fax processing solution in financial industry yet - they only resolve the "conversion" problem, but not the "ingestion" problem which is the ultimate demand. With all above challenges in mind, we try to find a solution for financial fax processing by weighting data ingestion more over format. We spot signatures and tabular data with more focus, as the former is at the critical path beginning of fax processing, and the later stand for most efficiency improvement opportunity to capture concerned data elements in a batch. The solution requires a robust and accurate object detection model, where a few methods have been developed \cite{ren2015faster, dai2016r, li2017light}. We choose Faster R-CNN \cite{ren2015faster} to detect signatures and Light-Head R-CNN \cite{li2017light} to capture tabular data respectively. 
@@ -155,13 +221,6 @@ Besides the high performance, the reason we choose deep neural network-based met
 
 \section{Solution Overview}
 \subsection{Solution Architecture}
-
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=\linewidth]{figure1}
-	\caption{Solution Architecture Overview. }
-	\label{figure1}
-\end{figure}
 
 The solution architecture overview is shown in Figure \ref{figure1}. It consists of three major components, with respect to fax processing workflow in real financial institutions - signature verification, template classification and data extraction.
 
@@ -174,7 +233,7 @@ The last component is the data extraction piece. It serves two main goals. First
 The whole process is conducted semi-automatically as it is too risky to allow full straight through processing in FAX ingestion when FAX document quality is impacted by many factors. A UI is provided for operational staff to review and edit results. At every step where manual check is involved, any correction made will be included into the ground truth training sample set, fed into relative incremental training process to continuously refine the model.
 
 \subsection{Training strategy}
-For model training's efficiency and effectiveness concern, we propose a staged training strategy inspired by \cite{bengio2009curriculum}. A large amount of mock data are synthesized with similar data structure in real faxes but a much simpler layout. Once models are converged, we set initialization weights on them and further train them with more complex real scenario like layouts - we call them ''true'' faxes. This easy-to-hard training strategy makes model converging process faster. \ref{figure4} shows both initial synthesized fax and further complicated fasx for data extraction task.
+For model training's efficiency and effectiveness concern, we propose a staged training strategy inspired by \cite{bengio2009curriculum}. A large amount of mock data are synthesized with similar data structure in real faxes but a much simpler layout. Once models are converged, we set them as the initialization weights and further train the models on images which are almost the same with FAXes in the real scenario with sensitive information hidden. Such FAX images are named as 'true' data for convenience in the rest of this paper. This easy-to-hard training strategy makes model converging process faster. \ref{figure4} shows both initial synthesized fax and further complicated fasx for data extraction task.
 
 \begin{figure}[h]
 	\centering
@@ -263,7 +322,7 @@ For writer verification task, we also report the result of a GoogleNet based mod
 \begin{figure*}[h]
 	\centering
 	\includegraphics[width=\linewidth]{figure3}
-	\caption{Architecture of data extraction model }
+	\caption{Architecture of data extraction model}
 	\label{figure3}
 \end{figure*}
 
@@ -329,14 +388,14 @@ For the data detection task, as shown in Figure \ref{figure4}, the layout of rea
 For text recognition model, we simply mix the images of table cells and text snippets from both the synthesized and true datasets. It should be noted proper preprocessing process can greatly improve the recognition accuracy. Specifically, we preprocessed the cell and text snippet images with enhancing methods such as normalization, text smoothing with threshold 50\%, grayscaling, background cleaning with filter size 25, background trimming, sharpening and border padding. The preprocessing methods are verified to be effective in our experiments.
 
 \begin{comment}
-è¿™é‡Œæœ‰æ²¡æœ‰ä¸€äº›æ±‡æ€»çš„æ•°æ®æ¥è¡¨å¾è¿™äº›é¢„å¤„ç†å¸¦æ¥çš„å¥½å¤„ï¼Ÿ
+ÕâÀïÓĞÃ»ÓĞÒ»Ğ©»ã×ÜµÄÊı¾İÀ´±íÕ÷ÕâĞ©Ô¤´¦Àí´øÀ´µÄºÃ´¦£¿
 \end{comment}
 
 \subsubsection*{\rm \textbf{Evaluation Metrics}}
 The data detection model is evaluated with mAP metric which is the same as the signature detection model. For text recognition, we propose a hybrid evaluation metric called Modified Word Accuracy which is more appropriate to measure how much manual labor can be reduced by our solution. To be specific, unlike existing work \cite{borisyuk2018rosetta, shi2017end} which uses fragment accuracy and edit distance for independent evaluation, we combine the two metrics. First we set score 1 to all correctly recognized words, then for incorrect words, the score is defined as the ratio of edit distance between the correct and incorrect words to the length of the true word. 
 
 \begin{comment}
-è¿™ä¸ªæ··åˆåº¦é‡çš„å…·ä½“å¥½å¤„ä»ä¸Šé¢çš„è§£é‡Šæ²¡çœ‹å‡ºæ¥ã€‚ã€‚ã€‚å®ƒæ€ä¹ˆæç°èƒ½èŠ‚çº¦çš„å·¥ä½œé‡çš„ï¼Ÿæ„Ÿè§‰åªæ˜¯ä¸ªæ¯”ä¾‹ï¼Ÿ
+Õâ¸ö»ìºÏ¶ÈÁ¿µÄ¾ßÌåºÃ´¦´ÓÉÏÃæµÄ½âÊÍÃ»¿´³öÀ´¡£¡£¡£ËüÔõÃ´ÌáÏÖÄÜ½ÚÔ¼µÄ¹¤×÷Á¿µÄ£¿¸Ğ¾õÖ»ÊÇ¸ö±ÈÀı£¿
 \end{comment}
 
 \subsubsection*{\rm \textbf{Results}}
@@ -348,8 +407,8 @@ For text recognition task, we can observe clear gap between the two strategies w
 needed to check and edit recognized tables and texts. Manual typing the entire fax content is no longer needed.
 
 \begin{comment}
-åªè¦1-2ä¸ªæ“ä½œå‘˜è¿™ä¸ªç»“è®ºæ˜¯æ€ä¹ˆå¾—å‡ºçš„ï¼Ÿ
-æ£€æŸ¥å·¥ä½œæ˜¯çœ‹å†…å®¹æ˜¯ä¸æ˜¯å¯¹ï¼Œç„¶åçº æ­£ï¼Ÿ
+Ö»Òª1-2¸ö²Ù×÷Ô±Õâ¸ö½áÂÛÊÇÔõÃ´µÃ³öµÄ£¿
+¼ì²é¹¤×÷ÊÇ¿´ÄÚÈİÊÇ²»ÊÇ¶Ô£¬È»ºó¾ÀÕı£¿
 \end{comment}
 
 \begin{table}
@@ -387,34 +446,35 @@ needed to check and edit recognized tables and texts. Manual typing the entire f
 \section{Deployment}
 \subsection{Deployment Strategy}
 
-All experiments are conducted on a server with 4 Titan XP GPUs. The 3 components' models are assigned to one GPU respectively and the last one is reserved for incremental training which will be mentioned later. To ensure process efficiency, we support up to 256 fax images concurrent processing in a multithread way. Following work in \cite{li2017light}, we resize the shorter edge of each fax image to 800 pixels, and put a constrain on the longer edge length of no longer than 1200 pixels. A user interface is provided to show outcomes from each step as \ref{figure6}. Operators can check, edit and submit the ingestion results through the UI workflow. The average training and inference time is listed in table\ref{avg_model_overhead_time}. we can see that the averagetime top rocess one fax image is less than 5 seconds which is applicable for financial industry and much faster than a manual worker does.The step takes most time is the text recognition process and the inference time depends on the word quantity. The entire system is built in the form of a webservice and we use coroutines for concurrence in  the back-end to reducememory overhead. The service is capable to serve at most 1024 manual checkers synchronously. All machine learning models in our system are implemented with Caffe2[11] except the light-headR-CNN model which is implemented with PyTorch[20].The whole system is already available and will beput into use after several months. 
+All experiments are conducted on a server with 4 Titan XP GPUs. The 3 components' models are assigned to one GPU respectively and the last one is reserved for incremental training which will be mentioned later. To ensure process efficiency, we support up to 256 fax images concurrent processing in a multithread way. Following work in \cite{li2017light}, we resize the shorter edge of each fax image to 800 pixels, and put a constrain on the longer edge length of no longer than 1200 pixels. A user interface is provided to show outcomes from each step as \ref{figure6}. Operators can check, edit and submit the ingestion results through the UI workflow. The average training and inference time is listed in table\ref{time}. we can see that the averagetime top rocess one fax image is less than 5 seconds which is applicable for financial industry and much faster than a manual worker does.The step takes most time is the text recognition process and the inference time depends on the word quantity. The entire system is built in the form of a webservice and we use coroutines for concurrence in  the back-end to reducememory overhead. The service is capable to serve at most 1024 manual checkers synchronously. All machine learning models in our system are implemented with Caffe2 [11] except the light-headR-CNN model which is implemented with PyTorch [20].The whole system is already available and will beput into use after several months. 
 
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=5cm]{figure6}
+	\includegraphics[width=8.5cm]{figure6}
 	\caption{The user interface of the solution.}
 	\label{figure6}
 \end{figure}
 
 
-\begin{table}
-	\caption{Average time overhead of the machine learning models}
-	\label{avg_model_overhead_time}
-	\centering
-	\begin{tabular}{cc}
-	\toprule
-	\textbf{Component} & \textbf{Model}  & \multicolumn{2}{c}{\textbf{Time}}\\
-	\cline{3-4}
-	& & \textbf{Training} & \textbf{Inference}\\
-	\midrule
-	Signature Verification & Faster R-CNN  & 96 hours & 0.42 sec/ 0.19 sec\\
-	Template Classification & A-Softmax/ GoogleNet  & 72 hours/ 72 hours & 0.19 sec/ 0.18 sec\\
-	Data Extraction & Light-head R-CNN/ CRNN  & 24 hours/ 96 hours & 0.79 sec/ 2.79 sec\\
-
-	\bottomrule
+\begin{table*}
+	\caption{Averaged time overhead of the machine learning models}
+	\label{time}
+	\begin{tabular}{cccc}
+		\toprule
+		\multirow{2}{3cm}{\textbf{Component}} & \multirow{2}{1cm}{\textbf{Model}} & 
+		\multicolumn{2}{c}{\textbf{Time}} \\
+		\cline{3-4}
+		& & Training & Inference \\
+		\midrule
+		\multirow{2}{3cm}{Signature Verification} & Faster R-CNN & 96 hours & 0.42 sec \\
+		& A-softmax & 72 hours & 0.19 sec \\
+		Template Classification & GoogleNet & 72 hours & 0.18 sec \\
+		\multirow{2}{3cm}{Data Extraction} & Light-head R-CNN & 24 hours & 0.79 sec \\
+		& CRNN & 96 hours & 2.79 sec \\
+		\bottomrule
 	\end{tabular}
-\end{table}
+\end{table*}
 
 
 \subsection{Incremental Learning with Author Feedbacks}
@@ -457,6 +517,8 @@ Moreover, we also propose a detailed interactive training strategy. With this ap
 
 In the future, we plan to extend the system in two aspects. First, we will investigate the methods to precisely convert tabular data into the formats we want. It is a challenging task for the statement and layout vary largely in different companies. Second, we are interested in improving the quality and accuracy of the existing models.
 
+\section*{ACKNOWLEDGMENTS}
+The authors would thank Cristoforo, Jerry A, Jianling Sun, Shanping Li, Bo Zhou, Xiaohu Yang, Hao Zhu, Wei Xu, Xiaoyu Mao, Xiaochun Zhu and others who contributed and supported us for development and deployment of the system.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{kdd}
